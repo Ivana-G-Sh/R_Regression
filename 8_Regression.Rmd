@@ -1,0 +1,132 @@
+---
+title: "Regression"
+output: html_document
+date: 13/03
+---
+
+
+#Linear Regression
+**how does mean of our outcome y vary with other variables**
+**predict a quantitative outcome variable (y) on the basis of one or multiple predictor variables (x)**
+**outcome variable - can have any one of an infinite number of possible values**
+http://www.sthda.com/english/articles/40-regression-analysis/165-linear-regression-essentials-in-r
+https://stat.ethz.ch/R-manual/R-devel/library/boot/html/melanoma.html
+
+**simple linear regression (assignment 3)**
+```{r setup, include=FALSE}
+library(COUNT)
+data(lbw)
+class(lbw)
+t(t(names(lbw)))
+```
+
+
+```{r, include=TRUE}
+data(lbw)
+View(lbw)
+plot(lbw$lwt, lbw$bwt, main="Regression of infant birth weight and maternal weight at last menstrual period", xlab="Weight at last menstrual period", ylab="Birthweight (g)") +
+abline(lm(bwt ~ lwt, data = lbw), col = "red")
+#corr.test(lbw$bwt, lbw$lwt)
+linmod<-lm(bwt ~ lwt, data = lbw)
+summary(linmod)
+
+#example 2
+plot(lbw$ftv, lbw$bwt)
+abline(lm(bwt ~ ftv, data = lbw))
+linmod_a <- lm(bwt ~ ftv, data = lbw)
+summary(linmod_a)
+```
+
+
+
+
+
+**1. build and summarize the linear model**
+**predicting the thickness of the melanoma on the basis of age, sex and ulceration of melanoma - multiple (multivariable) linear regression**
+**thickness is numerical - continuos**
+
+```{r, include=TRUE}
+data("melanoma")
+linmod1<-lm(thickness ~ age + sex + ulcer, data = melanoma) #build a model
+summary(linmod1) #summarize the model
+attributes(linmod1)
+attributes(linmod1$coefficients)
+```
+
+**2. Checking assumptions**
+```{r, include=TRUE}
+par(mfrow = c(2, 2)) #all4 diagnostic plots displayed together
+plot(linmod1) # you get 4 diagnostic plots, not a plot of the model
+```
+-Residuals vs Fitted: check the linear relationship assumptions. 􏰀 What to look for: horizontal line and no distinct patterns
+-Normal Q-Q plot: check that the residuals are normally distributed.  What to look for: residuals points follow the straight dashed line
+-What to look for: equally spread points
+-Residuals vs Leverage: identify influential cases/extreme values. Extremes are labelled
+
+**3.report as table**
+```{r}
+summary(linmod1)
+library(kableExtra)
+kable(summary(linmod1)$coef, digits = c(3, 3, 3, 4)) #report as table
+#association between thickness and ulcer
+```
+
+####Practice 2
+-Run a multivariable linear regression analysis to see if Species and Sepal Width are independently associated with Sepal Length. Make Versicolor the reference category
+
+```{r, include=TRUE}
+data(iris)
+head(iris)
+summary(iris)
+class(iris$Species)
+levels(iris$Species)
+mlr <- lm(Sepal.Length ~ Sepal.Width + relevel(as.factor(Species), ref="versicolor"), data = iris)
+summary(mlr)
+```
+
+
+
+#Logistic regression
+**the outcome (dependent variable) has only a limited number of possible values** 
+**Logistic regression is used when the response variable is categorical in nature.**
+**predicting wether melanoma will be ulcerated (yes or no - categorical, event is binary)**
+**status:1  died from melanoma, 2  alive and 3 died from causes unrelated to their melanoma.**
+**1. reference by default is status 1 - died from melanoma**
+```{r, include=TRUE}
+table(melanoma$ulcer)
+levels(as.factor(melanoma$status))
+logmod1 <- glm(ulcer ~ age + as.factor(status) + as.factor(sex), family = binomial, data = melanoma)
+summary(logmod1)
+coef.table <- summary(logmod1)$coef 
+kable(coef.table, digits=c(3, 3, 2, 4))
+```
+
+
+**2. change the reference category**
+**now ref is status 3 i.e. died from unrel cuases**
+```{r}
+logmod2 <- glm(ulcer ~ age + relevel(as.factor(status), ref=3) + as.factor(sex), family = binomial, data = melanoma)
+coef.table2 <- summary(logmod2)$coef 
+coef.table2
+kable(coef.table2, digits=c(3, 3, 2, 4))
+```
+
+**3. Coefficients are log-odds - exponentiate**
+```{r}
+## get odds ratios and 95% CI from logmod1 
+exp(cbind(OR = coef(logmod1), confint(logmod1)))
+logmod_fin<-exp(cbind(OR = coef(logmod1), confint(logmod1))) 
+kable(logmod_fin)
+```
+
+
+
+
+
+
+
+
+
+
+
+
